@@ -19,18 +19,16 @@ trait AllArbitrary {
   case class PrologString(str: String)
 
   val numeral: Gen[PrologString] = for {
-    ds <- Gen.listOf(digits)
-    if ds.nonEmpty
+    ds <- Gen.nonEmptyListOf(digits)
   } yield PrologString(ds.mkString)
 
   val smallAtom: Gen[PrologString] = for {
     l <- lowercase
-    cs <- Gen.listOf(character)
+    cs <- Gen.nonEmptyListOf(character)
   } yield PrologString((l :: cs).mkString)
 
   val stringAtom: Gen[PrologString] = for {
-    cs <- Gen.listOf(character)
-    if cs.nonEmpty
+    cs <- Gen.nonEmptyListOf(character)
   } yield PrologString("'" + cs.mkString + "'")
 
   val atom: Gen[PrologString] = Gen.oneOf(smallAtom, stringAtom)
@@ -39,4 +37,20 @@ trait AllArbitrary {
     u <- uppercase
     cs <- Gen.listOf(character)
   } yield PrologString((u :: cs).mkString)
+
+  val functor: Gen[PrologString] = atom
+  val term: Gen[PrologString] = for {
+    t <- Gen.oneOf(numeral, atom, variable)
+  } yield t
+
+  val termlist: Gen[PrologString] = for {
+    tl <- Gen.nonEmptyListOf(term)
+  } yield PrologString(tl.map(_.str).mkString(","))
+
+  val structure: Gen[PrologString] = for {
+    f <- functor
+    tl <- termlist
+  } yield PrologString(s"${f.str}(${tl.str})")
+
+
 }

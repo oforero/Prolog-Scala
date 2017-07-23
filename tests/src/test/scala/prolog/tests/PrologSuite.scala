@@ -87,4 +87,23 @@ class  PrologSuite extends FunSuite
     }
   }
 
+  test("Parsing a simple structure from a correct string succeeds") {
+    forAll(structure) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.Structure.run()
+        inside(parsed) {
+          case Success(ast.Structure(ast.Functor(f), Vector(tl@_*))) => true
+        }
+    }
+  }
+
+  test("Parsing a recursive structure from correct string succeed") {
+    val parser = new PrologParser("functor1(term1, Var1, term2)")
+    val parsed = parser.Structure.run()
+    inside(parsed) {
+      case Success(_) => true
+    }
+  }
+
 }
