@@ -13,6 +13,7 @@ trait AllArbitrary {
 
   private val digits = Gen.oneOf(digitsLst)
   private val lowercase = Gen.oneOf(lowerLst)
+  private val uppercase = Gen.oneOf(upperLst)
   private val character = Gen.oneOf(characterLst)
 
   case class PrologString(str: String)
@@ -27,9 +28,15 @@ trait AllArbitrary {
     cs <- Gen.listOf(character)
   } yield PrologString((l :: cs).mkString)
 
-  val string: Gen[PrologString] = for {
+  val stringAtom: Gen[PrologString] = for {
     cs <- Gen.listOf(character)
     if cs.nonEmpty
-  } yield PrologString(cs.mkString)
+  } yield PrologString("'" + cs.mkString + "'")
 
+  val atom: Gen[PrologString] = Gen.oneOf(smallAtom, stringAtom)
+
+  val variable: Gen[PrologString] = for {
+    u <- uppercase
+    cs <- Gen.listOf(character)
+  } yield PrologString((u :: cs).mkString)
 }
