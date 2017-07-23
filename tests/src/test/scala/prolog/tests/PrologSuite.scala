@@ -24,9 +24,7 @@ class  PrologSuite extends FunSuite
 
   test("Parsing a string of digits as a numeral") {
     forAll(numeral) {
-      (nstr: String) => {
-        new PrologParser(nstr).Numeral.run() shouldEqual Success(ast.Numeral(nstr))
-      }
+      case PrologString(nstr) => new PrologParser(nstr).Numeral.run() shouldEqual Success(ast.Numeral(nstr))
     }
   }
 
@@ -36,6 +34,20 @@ class  PrologSuite extends FunSuite
     inside(parsed) {
       case Failure(err: ParseError) => parser.formatError(err) startsWith "[Invalid input 'F', expected Numeral (line 1, column 1)"
     }
-
   }
+
+  test("Parsing a small atom from a correct string") {
+    forAll(smallAtom) {
+      case PrologString(astr) => new PrologParser(astr).SmallAtom.run() shouldEqual Success(ast.Atom(astr))
+    }
+  }
+
+  test("Parsing a small atom from an incorrect string") {
+    val parser = new PrologParser("Failure")
+    val parsed = parser.SmallAtom.run()
+    inside(parsed) {
+      case Failure(err: ParseError) => parser.formatError(err) startsWith "[Invalid input 'F', expected Numeral (line 1, column 1)"
+    }
+  }
+
 }
