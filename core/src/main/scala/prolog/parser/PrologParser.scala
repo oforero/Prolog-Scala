@@ -5,7 +5,6 @@ import prolog.ast
 import shapeless.{::, HNil}
 
 class PrologParser(val input: ParserInput) extends PrologRecognizer {
-
   def Numeral: Rule[HNil, ::[ast.Numeral, HNil]] = rule { capture(numeral) ~> (nstr => ast.Numeral(nstr)) }
   def SmallAtom: Rule[HNil, ::[ast.Atom, HNil]] = rule { capture(smallAtom) ~> (str => ast.Atom(str)) }
   def StringAtom: Rule[HNil, ::[ast.Atom, HNil]] = rule { capture(stringAtom) ~> (str => ast.Atom(str)) }
@@ -13,19 +12,28 @@ class PrologParser(val input: ParserInput) extends PrologRecognizer {
   def Variable: Rule[HNil, ::[ast.Variable, HNil]] = rule { capture(variable) ~> (str => ast.Variable(str)) }
 
 
-  def Term: Rule[HNil, ::[ast.Term, HNil]] = rule { Numeral | Variable | Structure  | Atom }
-  def Functor: Rule[HNil, ::[ast.Functor, HNil]] = rule { capture(functor) ~> (str => ast.Functor(str)) }
+  def SimpleTerm: Rule[HNil, ::[ast.Term , HNil]] = rule { Numeral | Variable | Atom }
+  def Term: Rule[HNil, ::[ast.Term, HNil]] = rule { Structure | SimpleTerm }
+  def TermList: Rule[HNil, ::[Seq[ast.Term], HNil]] = rule { oneOrMore(Term).separatedBy(comma ~ whitespace) }
 
-  def StructContentsStr: Rule[HNil, ::[String, HNil]] = rule { capture(structContents) }
-  def StructContents: Rule[HNil, ::[Seq[ast.Term], HNil]] = rule {
-    oneOrMore(Numeral | Variable | Atom ).separatedBy( comma ~ whitespace )
-  }
-  def Structure: Rule[HNil, ::[ast.Structure, HNil]] = rule {
-    Functor ~ openparenthesis ~ StructContentsStr ~ closeparenthesis ~> {
-      (f: ast.Functor, tl: String) =>
-        val parsedContent = new PrologParser(tl).StructContents.run()
-        test( parsedContent.isSuccess ) ~ push(ast.Structure(f, parsedContent.get))
-      }
+  def Arguments: Rule[HNil, ::[Seq[ast.Term], HNil]] = rule { openparenthesis ~ TermList ~ closeparenthesis }
+  def Structure: Rule[HNil, ::[ast.Structure, HNil]] = rule { Atom ~ Arguments ~>
+    ((f, argv) => ast.Structure(f, argv))
   }
 
+  def Predicate: Rule[HNil, ::[ast.Predicate, HNil]] = rule { Atom | Structure }
+  def PredicateList: Rule[HNil, ::[Seq[ast.Predicate], HNil]] = rule {
+    oneOrMore(Predicate).separatedBy(comma ~ whitespace)
+  }
+  def SimpleClause: Rule[HNil, ::[ast.SimpleClause, HNil]] = rule {
+    Predicate ~ whitespace ~ stop ~> ((pred) => ast.SimpleClause(pred))
+  }
+  def ComplexClause: Rule[HNil, ::[ast.ComplexClause, HNil]] = rule {
+    Predicate ~ is ~ PredicateList ~> ((p, pl) => ast.ComplexClause(p, pl))
+  }
+  def Clause: Rule[HNil, ::[ast.Clause, HNil]] = rule { SimpleClause | ComplexClause }
+
+  def Query: Rule[HNil, ::[ast.Query, HNil]] = rule {
+    query ~ PredicateList ~> ((pl) => ast.Query(pl))
+  }
 }

@@ -14,10 +14,12 @@ sealed trait SimpleType extends PrologType {
   def text: String
 }
 
-sealed  trait Term extends PrologType
-
+sealed trait Term extends PrologType
 sealed trait Constant extends SimpleType with Term
-case class Atom(text: String) extends Constant {
+sealed trait Predicate extends PrologType with Term
+sealed trait Clause extends PrologType
+
+case class Atom(text: String) extends Constant with Predicate {
   require {
     Validator(text).atom.run() match {
       case Success(_) => true
@@ -44,13 +46,9 @@ case class Variable(text: String) extends SimpleType with Term {
   }
 }
 
-case class Functor(text: String) extends Constant {
-  require {
-    Validator(text).functor.run() match {
-      case Success(_) => true
-      case Failure(_) => false
-    }
-  }
-}
+case class Structure(functor: Atom, terms: Seq[Term]) extends PrologType with Predicate
 
-case class Structure(functor: Functor, terms: Seq[Term]) extends PrologType with Term
+case class SimpleClause(pred: Predicate) extends Clause
+case class ComplexClause(pred: Predicate, lst: Seq[Predicate]) extends Clause
+
+case class Query(lst: Seq[Predicate]) extends PrologType

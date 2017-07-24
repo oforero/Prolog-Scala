@@ -3,7 +3,7 @@ package tests
 
 import org.parboiled2.ParseError
 import org.scalatest.prop.{Checkers, GeneratorDrivenPropertyChecks}
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers, Inside}
+import org.scalatest.{BeforeAndAfterAll, FunSuite, Inside, Matchers}
 import org.typelevel.discipline.scalatest.Discipline
 import prolog.parser.PrologParser
 import prolog.tests.arbitrary.AllArbitrary
@@ -93,16 +93,16 @@ class  PrologSuite extends FunSuite
         val parser = new PrologParser(str)
         val parsed = parser.Structure.run()
         inside(parsed) {
-          case Success(ast.Structure(ast.Functor(f), Vector(tl@_*))) => true
+          case Success(ast.Structure(ast.Atom(f), Vector(tl@_*))) => true
         }
     }
   }
 
   test("Parsing a recursive structure from correct string succeed") {
-    val parser = new PrologParser("functor1(term1, Var1, term2)")
+    val parser = new PrologParser("functor1(term1, Var1, functor2(term2))")
     val parsed = parser.Structure.run()
     inside(parsed) {
-      case Success(_) => true
+      case Success(ast.Structure(ast.Atom("functor1"), Vector(_, _, ast.Structure(_, _)))) => true
     }
   }
 
