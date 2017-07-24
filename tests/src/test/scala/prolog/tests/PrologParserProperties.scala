@@ -2,9 +2,8 @@ package prolog
 package tests
 
 import org.parboiled2.ParseError
-import org.scalatest.prop.{Checkers, GeneratorDrivenPropertyChecks}
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Inside, Matchers}
-import org.typelevel.discipline.scalatest.Discipline
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.{FunSuite, Inside, Matchers}
 import prolog.parser.PrologParser
 import prolog.tests.arbitrary.AllArbitrary
 
@@ -13,12 +12,9 @@ import scala.util.{Failure, Success}
 /**
   * Base definition for Prolog test suites.
   */
-class  PrologSuite extends FunSuite
-  with BeforeAndAfterAll
-  with Checkers
+class  PrologParserProperties extends FunSuite
   with Matchers
   with GeneratorDrivenPropertyChecks
-  with Discipline
   with  AllArbitrary {
   import Inside._
 
