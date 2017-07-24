@@ -15,11 +15,13 @@ trait PrologRecognizer extends Parser {
   protected def closeparenthesis: CharPredicate = CharPredicate(')')
   protected def comma: CharPredicate = CharPredicate(',')
   protected def space: CharPredicate = CharPredicate(' ')
-  protected def stop: CharPredicate = CharPredicate('.')
-  protected def is: CharPredicate = CharPredicate(":-")
-  protected def query: CharPredicate = CharPredicate("?-")
+  protected def space2: CharPredicate = CharPredicate(' ', '\n')
+  protected def implies: String = ":-"
+  protected def query: String = "?- "
 
   def whitespace: Rule[HNil, HNil] = rule { zeroOrMore(space) }
+  def separator: Rule[HNil, HNil] = rule { oneOrMore(space2)}
+  def stop: Rule[HNil, HNil] = rule { oneOrMore(space) ~ "." ~ zeroOrMore(space2) }
   def numeral: Rule[HNil, HNil] = rule { oneOrMore(digit) }
   def smallAtom: Rule[HNil, HNil] = rule { lowercase ~ zeroOrMore(characters) }
   def stringAtom: Rule[HNil, HNil] = rule { quote ~ zeroOrMore(characters) ~ quote }

@@ -52,5 +52,39 @@ trait AllArbitrary {
     tl <- termlist
   } yield PrologString(s"${f.str}(${tl.str})")
 
+  val predicate: Gen[PrologString] = for {
+    p <- Gen.oneOf(atom, structure)
+  } yield p
+
+  val predicatelist: Gen[PrologString] = for {
+    ps <- Gen.nonEmptyListOf(predicate)
+  } yield PrologString(ps.map(_.str).mkString(", "))
+
+  val simpleclause: Gen[PrologString] = for {
+    p <- predicate
+  } yield PrologString(s"${p.str} .")
+
+  val complexclause: Gen[PrologString] = for {
+    p <- predicate
+    pl <- predicatelist
+  } yield PrologString(s"${p.str} :- ${pl.str} .")
+
+  val clause: Gen[PrologString] = for {
+    c <- Gen.oneOf(simpleclause, complexclause)
+  } yield c
+
+  val clauselist: Gen[PrologString] = for {
+    cl <- Gen.nonEmptyListOf(clause)
+  } yield PrologString(cl.map(_.str).mkString("\n"))
+
+  val query: Gen[PrologString] = for {
+    pl <- predicatelist
+  } yield PrologString(s"?- ${pl.str} .")
+
+  val program: Gen[PrologString] = for {
+    cl <- Gen.listOf(clause)
+    clstr = cl.map(_.str).mkString("\n") ++ (if(cl.isEmpty) "" else "\n")
+    q <- query
+  } yield PrologString(s"$clstr${q.str}")
 
 }

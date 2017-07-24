@@ -48,7 +48,9 @@ case class Variable(text: String) extends SimpleType with Term {
 
 case class Structure(functor: Atom, terms: Seq[Term]) extends PrologType with Predicate
 
-case class SimpleClause(pred: Predicate) extends Clause
-case class ComplexClause(pred: Predicate, lst: Seq[Predicate]) extends Clause
+case class SimpleClause(predicate: Predicate) extends Clause
+case class ComplexClause(predicate: Predicate, lst: Seq[Predicate]) extends Clause
 
-case class Query(lst: Seq[Predicate]) extends PrologType
+case class Query(predicates: Seq[Predicate]) extends PrologType
+
+case class Program(clauses: Seq[Clause], query: Query) extends PrologType

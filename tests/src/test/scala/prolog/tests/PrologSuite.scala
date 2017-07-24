@@ -98,11 +98,102 @@ class  PrologSuite extends FunSuite
     }
   }
 
-  test("Parsing a recursive structure from correct string succeed") {
+  test("Parsing a recursive structure from a correct string succeed") {
     val parser = new PrologParser("functor1(term1, Var1, functor2(term2))")
     val parsed = parser.Structure.run()
     inside(parsed) {
       case Success(ast.Structure(ast.Atom("functor1"), Vector(_, _, ast.Structure(_, _)))) => true
+    }
+  }
+
+  test("Parsing a predicate from a correct string succeeds") {
+    forAll(predicate) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.Predicate.run()
+        inside(parsed) {
+          case Success(_: ast.Predicate) => true
+        }
+    }
+  }
+
+  test("Parsing a predicate list from a correct string succeeds") {
+    forAll(predicatelist) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.PredicateList.run()
+        inside(parsed) {
+          case Success(_: Vector[ast.Predicate]) => true
+        }
+    }
+  }
+
+  test("Parsing a simple clause from a correct string succeeds") {
+    forAll(simpleclause) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.SimpleClause.run()
+        inside(parsed) {
+          case Success(_: ast.SimpleClause) => true
+        }
+    }
+  }
+
+  test("Parsing a complex clause from a correct string succeeds") {
+    forAll(complexclause) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.ComplexClause.run()
+        inside(parsed) {
+          case Success(_: ast.ComplexClause) => true
+        }
+    }
+  }
+
+  test("Parsing a clause from a correct string succeeds") {
+    forAll(clause) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.Clause.run()
+        inside(parsed) {
+          case Success(_: ast.Clause) => true
+        }
+    }
+  }
+
+  test("Parsing a clause list from a correct string succeeds") {
+    forAll(clauselist) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.ClauseList.run()
+        inside(parsed) {
+          case Success(_: Vector[ast.Clause]) => true
+        }
+    }
+  }
+
+  test("Parsing a query from a correct string succeeds") {
+    forAll(query) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.Query.run()
+        inside(parsed) {
+          case Success(_: ast.Query) => true
+        }
+    }
+  }
+
+  test("Parsing a Program from a correct string succeeds") {
+    forAll(program) {
+      case PrologString(str) =>
+        val parser = new PrologParser(str)
+        val parsed = parser.Program.run()
+        inside(parsed) {
+          case Success(ast.Program(_, _)) => true
+          case Failure(err: ParseError) =>
+            println(parser.formatError(err))
+            throw err
+        }
     }
   }
 

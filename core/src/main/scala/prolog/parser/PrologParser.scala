@@ -21,19 +21,34 @@ class PrologParser(val input: ParserInput) extends PrologRecognizer {
     ((f, argv) => ast.Structure(f, argv))
   }
 
-  def Predicate: Rule[HNil, ::[ast.Predicate, HNil]] = rule { Atom | Structure }
+  def Predicate: Rule[HNil, ::[ast.Predicate, HNil]] = rule { Structure | Atom }
   def PredicateList: Rule[HNil, ::[Seq[ast.Predicate], HNil]] = rule {
     oneOrMore(Predicate).separatedBy(comma ~ whitespace)
   }
+
   def SimpleClause: Rule[HNil, ::[ast.SimpleClause, HNil]] = rule {
-    Predicate ~ whitespace ~ stop ~> ((pred) => ast.SimpleClause(pred))
+    Predicate ~ stop ~> ((pred) => ast.SimpleClause(pred))
   }
   def ComplexClause: Rule[HNil, ::[ast.ComplexClause, HNil]] = rule {
-    Predicate ~ is ~ PredicateList ~> ((p, pl) => ast.ComplexClause(p, pl))
+    Predicate ~ whitespace ~ implies ~ whitespace ~ PredicateList ~ stop ~> ((p, pl) => ast.ComplexClause(p, pl))
   }
   def Clause: Rule[HNil, ::[ast.Clause, HNil]] = rule { SimpleClause | ComplexClause }
+  def ClauseList: Rule[HNil, ::[Seq[ast.Clause], HNil]] = rule {
+    oneOrMore(Clause)
+  }
 
   def Query: Rule[HNil, ::[ast.Query, HNil]] = rule {
-    query ~ PredicateList ~> ((pl) => ast.Query(pl))
+    query ~ whitespace ~ PredicateList ~ stop ~> ((pl) => ast.Query(pl))
   }
+
+  def QueryOnly: Rule[HNil, ::[ast.Program, HNil]] = rule {
+    Query ~> ((q: ast.Query) => ast.Program(Vector(), q))
+  }
+
+  def ClausesAndQuery: Rule[HNil, ::[ast.Program, HNil]] = rule {
+    ClauseList ~ Query ~> ((cl: Seq[ast.Clause],q: ast.Query) => ast.Program(cl, q))
+  }
+
+  def Program: Rule[HNil, ::[ast.Program, HNil]] = rule { QueryOnly | ClausesAndQuery }
+
 }
